@@ -37,7 +37,7 @@ public class GooglePlay extends Godot.SingletonBase
 		registerClass ("GooglePlay", new String[] {
 			"init", "login", "logout", "unlock_achievement",
 			"increse_achievement", "show_achievements",
-			"submit_leaderboard", "show_leaderboard"
+			"submit_leaderboard", "show_leaderboard", "show_leaderboards"
 		});
 
 		activity = p_activity;
@@ -85,7 +85,7 @@ public class GooglePlay extends Godot.SingletonBase
 		});
 	}
 
-	public void show_achievements(final String as_id) {
+	public void show_achievements() {
 		activity.runOnUiThread(new Runnable() {
 			public void run() {
 				achievement_show_list();
