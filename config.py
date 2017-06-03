@@ -13,6 +13,8 @@ def configure(env):
         env.android_add_dependency("compile 'com.google.android.gms:play-services-plus:10.0.1'")
         env.android_add_dependency("compile 'com.google.android.gms:play-services-ads:10.0.1'")
 
+	env.android_add_dependency("compile 'com.google.firebase:firebase-invites:10.0.1'")
+
         env.android_add_java_dir("android");
         env.android_add_res_dir("res");
         env.android_add_to_manifest("android/AndroidManifestChunk.xml");
