@@ -10,6 +10,7 @@ import android.content.IntentSender.SendIntentException;
 import android.util.Log;
 import android.view.View;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 
 import java.util.Arrays;
 import java.util.List;
@@ -17,25 +18,25 @@ import java.util.List;
 import org.json.JSONObject;
 import org.json.JSONException;
 
-import com.google.android.gms.appinvite.AppInvite;
-import com.google.android.gms.appinvite.AppInviteInvitationResult;
-import com.google.android.gms.appinvite.AppInviteReferral;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
-import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.drive.Drive;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.Scopes;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.Scope;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.gms.games.Games;
-import com.google.android.gms.plus.Plus;
-import com.google.android.gms.plus.model.people.Person;
 
-public class PlayService
-	implements ConnectionCallbacks, OnConnectionFailedListener {
+public class PlayService {
 
 	public static PlayService getInstance (Activity p_activity) {
 		if (mInstance == null) {
-			mInstance = new PlayService(p_activity);
+			synchronized (PlayService.class) {
+				mInstance = new PlayService(p_activity);
+			}
 		}
 
 		return mInstance;
@@ -53,22 +54,18 @@ public class PlayService
 			Log.d(TAG, "Play Service Available.");
 		}
 
-		mGoogleApiClient = new GoogleApiClient.Builder(activity)
-		.addConnectionCallbacks(this)
-		.addOnConnectionFailedListener(this)
-		.addApi(Games.API).addScope(Games.SCOPE_GAMES)
-		.addApi(Plus.API).addScope(Plus.SCOPE_PLUS_LOGIN)
-		.addApi(AppInvite.API)
+		GoogleSignInOptions gso =
+		new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+		.requestScopes(new Scope(Scopes.DRIVE_APPFOLDER))
+		.requestScopes(new Scope(Scopes.GAMES))
+		.requestScopes(new Scope(Scopes.PROFILE))
+		.requestEmail()
 		.build();
 
+		mGoogleSignInClient = GoogleSignIn.getClient(activity, gso);
+
 		Log.d(TAG, "Google initialized.");
-
 		onStart();
-	}
-
-	public GoogleApiClient getApiClient() {
-		if (mGoogleApiClient == null) { return null; }
-		return mGoogleApiClient;
 	}
 
 	public boolean isConnected() {
@@ -76,45 +73,40 @@ public class PlayService
 	}
 
 	public void connect() {
-		if (mGoogleApiClient == null) {
-			Log.d(TAG, "GoogleApiClient not initialized");
+		if (mGoogleSignInClient == null) {
+			Log.d(TAG, "GoogleSignInClient not initialized");
 			return;
 		}
 
-		if (!mGoogleApiClient.isConnected() && !mGoogleApiClient.isConnecting()) {
-			mGoogleApiClient.connect();
-			isRequestingSignIn = true;
-			Log.d(TAG, "Connecting to google play service");
-		} else { /** **/ }
+		Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+		activity.startActivityForResult(signInIntent, GUtils.GOOGLE_SIGN_IN_REQUEST);
 	}
 
 	public void disconnect() {
-		if(mGoogleApiClient.isConnected()) {
-			Games.signOut(mGoogleApiClient);
-			mGoogleApiClient.disconnect();
-			isGooglePlayConnected = false;
-
-			GUtils.callScriptFunc("login", "false");
-			Log.d(TAG, "Google play service disconnected.");
-		}
+		mGoogleSignInClient.signOut()
+		.addOnCompleteListener(activity, new OnCompleteListener<Void>() {
+			@Override
+			public void onComplete(@NonNull Task<Void> task) {
+				Log.d(TAG, "Google signed out.");
+				GUtils.callScriptFunc("login", "false");
+			}
+		});
 	}
 
 	public void succeedSignIn() {
 		Log.d(TAG, "Google signed in.");
-
-		isResolvingConnectionFailure = false;
-		isGooglePlayConnected = true;
-		isRequestingSignIn = false;
-
 		GUtils.callScriptFunc("login", "true");
 	}
 
 	public void achievement_unlock(final String achievement_id) {
 		connect();
 
-		if (isGooglePlayConnected) {
+		mAccount = GoogleSignIn.getLastSignedInAccount(activity);
+
+		if (mAccount != null) {
 			// KeyValueStorage.setValue(achievement_id, "true");
-			Games.Achievements.unlock(mGoogleApiClient, achievement_id);
+			Games.getAchievementsClient(activity, mAccount).unlock(achievement_id);
+
 			Log.i(TAG, "PlayGameServices: achievement_unlock");
 		} else { Log.w(TAG, "PlayGameServices: Google calling connect"); }
 	}
@@ -122,8 +114,12 @@ public class PlayService
 	public void achievement_increment(final String achievement_id, final int amount) {
 		connect();
 
-		if (isGooglePlayConnected) {
-			Games.Achievements.increment(mGoogleApiClient, achievement_id, amount);
+		mAccount = GoogleSignIn.getLastSignedInAccount(activity);
+
+		if (mAccount != null) {
+			Games.getAchievementsClient(activity, mAccount)
+			.increment(achievement_id, amount);
+
 			Log.i(TAG, "PlayGameServices: achievement_incresed");
 		} else { Log.i(TAG, "PlayGameServices: Google calling connect"); }
 	}
@@ -131,18 +127,29 @@ public class PlayService
 	public void achievement_show_list() {
 		connect();
 
-		if (isGooglePlayConnected) {
-			activity.startActivityForResult(
-			Games.Achievements.getAchievementsIntent(mGoogleApiClient),
-			REQUEST_ACHIEVEMENTS);
+		mAccount = GoogleSignIn.getLastSignedInAccount(activity);
+
+		if (mAccount != null) {
+			Games.getAchievementsClient(activity, mAccount)
+			.getAchievementsIntent()
+			.addOnSuccessListener(new OnSuccessListener<Intent>() {
+				@Override
+				public void onSuccess(Intent intent) {
+					activity.startActivityForResult(intent, REQUEST_ACHIEVEMENTS);
+				}
+			});
+
 		} else { Log.i(TAG, "PlayGameServices: Google calling connect"); }
 	}
 
 	public void leaderboard_submit(String id, int score) {
 		connect();
 
-		if (isGooglePlayConnected) {
-			Games.Leaderboards.submitScore(mGoogleApiClient, id, score);
+		mAccount = GoogleSignIn.getLastSignedInAccount(activity);
+
+		if (mAccount != null) {
+			Games.getLeaderboardsClient(activity, mAccount).submitScore(id, score);
+
 			Log.i(TAG, "PlayGameServices: leaderboard_submit, " + score);
 		} else { Log.i(TAG, "PlayGameServices: Google calling connect"); }
 	}
@@ -150,118 +157,104 @@ public class PlayService
 	public void leaderboard_show(final String l_id) {
 		connect();
 
-		if (isGooglePlayConnected) {
-			activity.startActivityForResult(
-			Games.Leaderboards.getLeaderboardIntent(mGoogleApiClient,
-			l_id), REQUEST_LEADERBOARD);
+		mAccount = GoogleSignIn.getLastSignedInAccount(activity);
+
+		if (mAccount != null) {
+			Games.getLeaderboardsClient(activity, mAccount)
+			.getLeaderboardIntent(l_id)
+			.addOnSuccessListener(new OnSuccessListener<Intent>() {
+				@Override
+				public void onSuccess (Intent intent) {
+					activity.startActivityForResult(intent, REQUEST_LEADERBOARD);
+				}
+			});
+
 		} else { Log.i(TAG, "PlayGameServices: Google not login calling connect"); }
 	}
 
 	public void leaderboard_show_list() {
 		connect();
 
-		if (isGooglePlayConnected) {
-			activity.startActivityForResult(
-			Games.Leaderboards.getAllLeaderboardsIntent(mGoogleApiClient),
-			REQUEST_LEADERBOARD);
+		mAccount = GoogleSignIn.getLastSignedInAccount(activity);
+
+		if (mAccount != null) {
+			Games.getLeaderboardsClient(activity, mAccount)
+			.getAllLeaderboardsIntent()
+			.addOnSuccessListener(new OnSuccessListener<Intent>() {
+				@Override
+				public void onSuccess (Intent intent) {
+					activity.startActivityForResult(intent, REQUEST_LEADERBOARD);
+				}
+			});
+		
 		} else { Log.i(TAG, "PlayGameServices: Google calling connect"); }
-	}
-
-	@Override
-	public void onConnected(Bundle m_bundle) {
-		Log.d(TAG, "Connected to google play service");
-
-		if (m_bundle != null) {
-
-		}
-
-		if (Plus.PeopleApi.getCurrentPerson(mGoogleApiClient) != null) {
-			final Person currentPerson = Plus.PeopleApi.getCurrentPerson(mGoogleApiClient);
-			String personName = currentPerson.getDisplayName();
-
-			Log.d(TAG, "Signed in as: " + personName);
-		}
-
-		succeedSignIn();
-	}
-
-	@Override
-	public void onConnectionSuspended(int m_cause) {
-		Log.i(TAG, "ConnectionSuspended: "+String.valueOf(m_cause));
-	}
-
-	@Override
-	public void onConnectionFailed(ConnectionResult m_result) {
-		Log.d(TAG, "google Connection failed.");
-
-		if (isResolvingConnectionFailure) { return; }
-		if(!isIntentInProgress && m_result.hasResolution()) {
-			try {
-				isIntentInProgress = true;
-				activity.startIntentSenderForResult(
-				m_result.getResolution().getIntentSender(),
-				GUtils.GOOGLE_SIGN_IN_REQUEST, null, 0, 0, 0);
-			} catch (SendIntentException ex) {
-				isIntentInProgress = false;
-				connect();
-			}
-
-			isResolvingConnectionFailure = true;
-			Log.d(TAG, "google Connection Resolving.");
-		}
 	}
 
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode == GUtils.GOOGLE_SIGN_IN_REQUEST) {
-			isIntentInProgress = false;
-			if (!mGoogleApiClient.isConnecting()) { mGoogleApiClient.connect(); }
+			Task<GoogleSignInAccount> task =
+			GoogleSignIn.getSignedInAccountFromIntent(data);
+
+			handleSignInResult(task);
+		}
+	}
+
+	private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
+		try {
+			mAccount = completedTask.getResult(ApiException.class);
+			succeedSignIn();
+		} catch (ApiException e) {
+			Log.w(TAG, "signInResult:failed code=" + e.getStatusCode());
 		}
 	}
 
 	public void onStart() {
-		if (mGoogleApiClient.isConnected()) {
+		mAccount = GoogleSignIn.getLastSignedInAccount(activity);
+
+		if (mAccount != null &&
+		GoogleSignIn.hasPermissions(mAccount, new Scope(Scopes.DRIVE_APPFOLDER))) {
+			Log.d(TAG, "Google already connected to an account");
 			succeedSignIn();
-			Log.i(TAG, "client was already connected");
 		} else {
-			Log.i(TAG, "connecting on start.");
+			Log.d(TAG, "Google not connected");
 			connect();
 		}
 
+
 		boolean autoLaunchDeepLink = true;
+		/**
+		// Check for App Invite invitations and launch deep-link activity if possible.
+		// Requires that an Activity is registered in AndroidManifest.xml to handle
+		// deep-link URLs.
 
-		AppInvite.AppInviteApi.getInvitation(mGoogleApiClient, activity, autoLaunchDeepLink)
-		.setResultCallback(new ResultCallback<AppInviteInvitationResult>() {
+		FirebaseDynamicLinks.getInstance().getDynamicLink(getIntent())
+		.addOnSuccessListener(this, new OnSuccessListener<PendingDynamicLinkData>() {
+                @Override
+                public void onSuccess(PendingDynamicLinkData data) {
+                    if (data == null) {
+                        Log.d(TAG, "getInvitation: no data");
+                        return;
+                    }
 
-			@Override
-			public void onResult(AppInviteInvitationResult result) {
-				Log.d(TAG, "getInvitation: onResult:" + result.getStatus());
+                    // Get the deep link
+                    Uri deepLink = data.getLink();
 
-				if (result.getStatus().isSuccess()) {
-					// Extract information from the intent
-					Intent intent = result.getInvitationIntent();
-					String deepLink = AppInviteReferral.getDeepLink(intent);
-					String iId = AppInviteReferral.getInvitationId(intent);
+                    // Extract invite
+                    FirebaseAppInvite invite = FirebaseAppInvite.getInvitation(data);
+                    if (invite != null) {
+                        String invitationId = invite.getInvitationId();
+                    }
 
-					// autoLaunchDeepLink = true we don't have to do anything
-					// here, but we could set that to false and manually choose
-					// an Activity to launch to handle the deep link here.
-					// ...
-
-					/**
-					JSONObject data = new JSONObject();
-
-					try {
-						data.put("deepLink", deepLink);
-						data.put("invitationID", iId);
-					} catch (JSONException e) {
-						Log.d(TAG, "JSONException: " + e.toString());
-					}
-
-					GUtils.callSctionFunc("data", data.toString());
-					**/
-				}
-			}
+                    // Handle the deep link
+                    // ...
+                }
+		}).addOnFailureListener(this, new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Log.w(TAG, "getDynamicLink:onFailure", e);
+                }
 		});
+		**/
 	}
 
 	public void onPause() {
@@ -273,9 +266,6 @@ public class PlayService
 	}
 
 	public void onStop() {
-		if (mGoogleApiClient.isConnected()) { mGoogleApiClient.disconnect(); }
-
-		isGooglePlayConnected = false;
 		activity = null;
 	}
 
@@ -290,10 +280,8 @@ public class PlayService
 	private static final int REQUEST_LEADERBOARD = 1002;
 	private static final String TAG = "GoogleService";
 
-	private Boolean isRequestingSignIn = false;
-	private Boolean isIntentInProgress = false;
 	private Boolean isGooglePlayConnected = false;
-	private Boolean isResolvingConnectionFailure = false;
 
-	private static GoogleApiClient mGoogleApiClient;
+	private GoogleSignInClient mGoogleSignInClient;
+	private GoogleSignInAccount mAccount;
 }

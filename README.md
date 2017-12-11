@@ -29,8 +29,8 @@ func _ready():
 		google.init(get_instance_id());
 
 func _receive_message(from, key, data):
-	from == "GooglePlay":
-		print("Key: " + key, " Data: ", data)
+	if from == "GooglePlay":
+		print("Key: ", key, " Data: ", data)
 
 ```
 

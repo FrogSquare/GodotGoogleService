@@ -9,14 +9,14 @@ def configure(env):
         env.android_add_gradle_classpath("com.google.gms:google-services:3.0.0")
         env.android_add_gradle_plugin("com.google.gms.google-services")
 
-        env.android_add_dependency("compile 'com.google.android.gms:play-services-games:10.0.1'")
-        env.android_add_dependency("compile 'com.google.android.gms:play-services-plus:10.0.1'")
-        env.android_add_dependency("compile 'com.google.android.gms:play-services-ads:10.0.1'")
+        env.android_add_dependency("compile 'com.google.android.gms:play-services-auth:11.6.0'")
+        env.android_add_dependency("compile 'com.google.android.gms:play-services-games:11.6.0'")
 
-	env.android_add_dependency("compile 'com.google.firebase:firebase-invites:10.0.1'")
+	env.android_add_dependency("compile 'com.google.firebase:firebase-invites:11.6.0'")
 
         env.android_add_java_dir("android");
         env.android_add_res_dir("res");
         env.android_add_to_manifest("android/AndroidManifestChunk.xml");
-        env.android_add_default_config("applicationId 'com.froglogics.dotsndots'")
+        env.android_add_to_permissions("android/AndroidPermissionsChunk.xml");
+        env.android_add_default_config("applicationId 'com.ravone.monsterjack'")
         env.disable_module()

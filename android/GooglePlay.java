@@ -6,10 +6,13 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.IntentSender.SendIntentException;
 import android.util.Log;
 import android.view.View;
 import android.os.Bundle;
+
 
 import java.util.Arrays;
 import java.util.List;
@@ -27,11 +30,24 @@ public class GooglePlay extends Godot.SingletonBase {
 		registerClass ("GooglePlay", new String[] {
 			"init", "login", "logout", "unlock_achievement",
 			"increse_achievement", "show_achievements",
-			"submit_leaderboard", "show_leaderboard", "show_leaderboards"
+			"submit_leaderboard", "show_leaderboard", "show_leaderboards",
+			"get_version_code"
 		});
 
 		activity = p_activity;
 	}
+
+	public int get_version_code(final int instanceID) {
+		try {
+			final PackageInfo pInfo =
+			activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0);
+
+			return pInfo.versionCode;
+		} catch (NameNotFoundException e) { }
+
+		return 0;
+	}
+
 
 	public void init(final int instanceID) {
 		activity.runOnUiThread(new Runnable() {
