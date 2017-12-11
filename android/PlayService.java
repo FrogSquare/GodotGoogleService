@@ -18,10 +18,12 @@ import java.util.List;
 import org.json.JSONObject;
 import org.json.JSONException;
 
+import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.Scope;
@@ -55,10 +57,7 @@ public class PlayService {
 		}
 
 		GoogleSignInOptions gso =
-		new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-		.requestEmail()
-		.requestScopes(new Scope(Scopes.DRIVE_APPFOLDER))
-		.requestScopes(new Scope(Scopes.PROFILE))
+		new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_GAMES_SIGN_IN)
 		.build();
 
 		mGoogleSignInClient = GoogleSignIn.getClient(activity, gso);
@@ -68,12 +67,18 @@ public class PlayService {
 	}
 
 	public boolean isConnected() {
-		return isGooglePlayConnected;
+		return GoogleSignIn.getLastSignedInAccount(activity) != null;
 	}
 
 	public void connect() {
 		if (mGoogleSignInClient == null) {
 			Log.d(TAG, "GoogleSignInClient not initialized");
+			return;
+		}
+
+		mAccount = GoogleSignIn.getLastSignedInAccount(activity);
+		if (mAccount != null) {
+			Log.d(TAG, "Google service is already connected");
 			return;
 		}
 
@@ -95,6 +100,28 @@ public class PlayService {
 	public void succeedSignIn() {
 		Log.d(TAG, "Google signed in.");
 		GUtils.callScriptFunc("login", "true");
+
+/**
+		mAchievementsClient = Games.getAchievementsClient(this, googleSignInAccount);
+		mLeaderboardsClient = Games.getLeaderboardsClient(this, googleSignInAccount);
+		mPlayersClient = Games.getPlayersClient(this, googleSignInAccount);
+
+		mPlayersClient.getCurrentPlayer()
+		.addOnCompleteListener(new OnCompleteListener<Player>() {
+			@Override
+			public void onComplete(@NonNull Task<Player> task) {
+				String displayName;
+
+				if (task.isSuccessful()) {
+					displayName = task.getResult().getDisplayName();
+				} else {
+					Exception e = task.getException();
+				}
+
+				GUtils.callScriptFunc("user", displayName);
+                    }
+		});
+**/
 	}
 
 	public void achievement_unlock(final String achievement_id) {
@@ -191,6 +218,9 @@ public class PlayService {
 
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode == GUtils.GOOGLE_SIGN_IN_REQUEST) {
+			GoogleSignInResult result =
+			Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+
 			Task<GoogleSignInAccount> task =
 			GoogleSignIn.getSignedInAccountFromIntent(data);
 
@@ -208,16 +238,35 @@ public class PlayService {
 		}
 	}
 
+	private void signInSilently() {
+		GoogleSignInClient signInClient = GoogleSignIn.getClient(activity,
+		GoogleSignInOptions.DEFAULT_GAMES_SIGN_IN);
+
+		signInClient.silentSignIn().addOnCompleteListener(activity,
+		new OnCompleteListener<GoogleSignInAccount>() {
+			@Override
+			public void onComplete(@NonNull Task<GoogleSignInAccount> task) {
+				if (task.isSuccessful()) {
+					// The signed in account is stored in the task's result.
+					succeedSignIn();
+				} else {
+					// Player will need to sign-in explicitly using via UI
+					Log.d(TAG, "Silent login failed");
+				}
+			}
+		});
+	}
+
 	public void onStart() {
 		mAccount = GoogleSignIn.getLastSignedInAccount(activity);
 
-		if (mAccount != null &&
-		GoogleSignIn.hasPermissions(mAccount, new Scope(Scopes.DRIVE_APPFOLDER))) {
+		if (mAccount != null) {
 			Log.d(TAG, "Google already connected to an account");
 			succeedSignIn();
 		} else {
 			Log.d(TAG, "Google not connected");
 			connect();
+			//signInSilently();
 		}
 
 
@@ -262,7 +311,7 @@ public class PlayService {
 	}
 
 	public void onResume() {
-
+		signInSilently();
 	}
 
 	public void onStop() {
@@ -279,8 +328,6 @@ public class PlayService {
 	private static final int REQUEST_ACHIEVEMENTS = 9002;
 	private static final int REQUEST_LEADERBOARD = 1002;
 	private static final String TAG = "GoogleService";
-
-	private Boolean isGooglePlayConnected = false;
 
 	private GoogleSignInClient mGoogleSignInClient;
 	private GoogleSignInAccount mAccount;

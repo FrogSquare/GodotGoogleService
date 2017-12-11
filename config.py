@@ -7,7 +7,7 @@ def configure(env):
         env.android_add_maven_repository("url 'https://maven.google.com'")
         env.android_add_maven_repository("url 'https://oss.sonatype.org/content/repositories/snapshots'")
 
-        env.android_add_gradle_classpath("com.google.gms:google-services:3.0.0")
+        env.android_add_gradle_classpath("com.google.gms:google-services:3.1.1")
         env.android_add_gradle_plugin("com.google.gms.google-services")
 
         env.android_add_dependency("compile 'com.google.android.gms:play-services-auth:11.6.0'")
