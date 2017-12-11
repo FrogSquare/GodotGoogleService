@@ -4,6 +4,7 @@ def can_build(plat):
 
 def configure(env):
     if env["platform"] == "android":
+        env.android_add_maven_repository("url 'https://maven.google.com'")
         env.android_add_maven_repository("url 'https://oss.sonatype.org/content/repositories/snapshots'")
 
         env.android_add_gradle_classpath("com.google.gms:google-services:3.0.0")

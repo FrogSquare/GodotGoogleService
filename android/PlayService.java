@@ -56,10 +56,9 @@ public class PlayService {
 
 		GoogleSignInOptions gso =
 		new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-		.requestScopes(new Scope(Scopes.DRIVE_APPFOLDER))
-		.requestScopes(new Scope(Scopes.GAMES))
-		.requestScopes(new Scope(Scopes.PROFILE))
 		.requestEmail()
+		.requestScopes(new Scope(Scopes.DRIVE_APPFOLDER))
+		.requestScopes(new Scope(Scopes.PROFILE))
 		.build();
 
 		mGoogleSignInClient = GoogleSignIn.getClient(activity, gso);
@@ -204,7 +203,8 @@ public class PlayService {
 			mAccount = completedTask.getResult(ApiException.class);
 			succeedSignIn();
 		} catch (ApiException e) {
-			Log.w(TAG, "signInResult:failed code=" + e.getStatusCode());
+			Log.w(TAG, "signInResult:failed code="
+			+ e.getStatusCode() + ", Message: " + e.getStatusMessage());
 		}
 	}
 
