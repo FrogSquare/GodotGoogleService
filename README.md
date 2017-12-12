@@ -59,7 +59,7 @@ google.show_leaderboards(); // show all available leaderboard
 
 # Log
 ```
-adb -d logcat godot:V GoogleService:V DEBUG:V AndroidRuntime:V ValidateServiceOp:V *:S
+adb -d logcat godot:V GoogleService:V SignInIntentService:V SignInIntentService:V SignInActivity:V DEBUG:V AndroidRuntime:V ValidateServiceOp:V *:S
 ```
 
 And if you are using [GodotFirebase](http://github.com/FrogSquare/GodotFireBase) add these, `GodotSQL:V FireBase:V` to the command

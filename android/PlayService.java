@@ -29,8 +29,13 @@ import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.games.AchievementsClient;
 import com.google.android.gms.games.Games;
+import com.google.android.gms.games.LeaderboardsClient;
+import com.google.android.gms.games.Player;
+import com.google.android.gms.games.PlayersClient;
+import com.google.android.gms.tasks.Task;
 
 public class PlayService {
 
@@ -58,16 +63,19 @@ public class PlayService {
 
 		GoogleSignInOptions gso =
 		new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_GAMES_SIGN_IN)
+		.requestScopes(new Scope(Scopes.GAMES))
+		.requestEmail()
 		.build();
 
 		mGoogleSignInClient = GoogleSignIn.getClient(activity, gso);
 
-		Log.d(TAG, "Google initialized.");
+		Log.d(TAG, "Google::Initialized");
 		onStart();
 	}
 
 	public boolean isConnected() {
-		return GoogleSignIn.getLastSignedInAccount(activity) != null;
+		mAccount = GoogleSignIn.getLastSignedInAccount(activity);
+		return mAccount != null;
 	}
 
 	public void connect() {
@@ -76,14 +84,13 @@ public class PlayService {
 			return;
 		}
 
-		mAccount = GoogleSignIn.getLastSignedInAccount(activity);
-		if (mAccount != null) {
+		if (isConnected()) {
 			Log.d(TAG, "Google service is already connected");
 			return;
 		}
 
 		Intent signInIntent = mGoogleSignInClient.getSignInIntent();
-		activity.startActivityForResult(signInIntent, GUtils.GOOGLE_SIGN_IN_REQUEST);
+		activity.startActivityForResult(signInIntent, GOOGLE_SIGN_IN_REQUEST);
 	}
 
 	public void disconnect() {
@@ -92,6 +99,11 @@ public class PlayService {
 			@Override
 			public void onComplete(@NonNull Task<Void> task) {
 				Log.d(TAG, "Google signed out.");
+
+				mAchievementsClient = null;
+				mLeaderboardsClient = null;
+				mPlayersClient = null;
+
 				GUtils.callScriptFunc("login", "false");
 			}
 		});
@@ -99,18 +111,18 @@ public class PlayService {
 
 	public void succeedSignIn() {
 		Log.d(TAG, "Google signed in.");
-		GUtils.callScriptFunc("login", "true");
 
-/**
-		mAchievementsClient = Games.getAchievementsClient(this, googleSignInAccount);
-		mLeaderboardsClient = Games.getLeaderboardsClient(this, googleSignInAccount);
-		mPlayersClient = Games.getPlayersClient(this, googleSignInAccount);
+		mAchievementsClient = Games.getAchievementsClient(activity, mAccount);
+		mLeaderboardsClient = Games.getLeaderboardsClient(activity, mAccount);
+		mPlayersClient = Games.getPlayersClient(activity, mAccount);
+
+		GUtils.callScriptFunc("login", "true");
 
 		mPlayersClient.getCurrentPlayer()
 		.addOnCompleteListener(new OnCompleteListener<Player>() {
 			@Override
 			public void onComplete(@NonNull Task<Player> task) {
-				String displayName;
+				String displayName = "UserName";
 
 				if (task.isSuccessful()) {
 					displayName = task.getResult().getDisplayName();
@@ -121,17 +133,14 @@ public class PlayService {
 				GUtils.callScriptFunc("user", displayName);
                     }
 		});
-**/
 	}
 
 	public void achievement_unlock(final String achievement_id) {
 		connect();
 
-		mAccount = GoogleSignIn.getLastSignedInAccount(activity);
-
-		if (mAccount != null) {
+		if (isConnected()) {
 			// KeyValueStorage.setValue(achievement_id, "true");
-			Games.getAchievementsClient(activity, mAccount).unlock(achievement_id);
+			mAchievementsClient.unlock(achievement_id);
 
 			Log.i(TAG, "PlayGameServices: achievement_unlock");
 		} else { Log.w(TAG, "PlayGameServices: Google calling connect"); }
@@ -140,11 +149,8 @@ public class PlayService {
 	public void achievement_increment(final String achievement_id, final int amount) {
 		connect();
 
-		mAccount = GoogleSignIn.getLastSignedInAccount(activity);
-
-		if (mAccount != null) {
-			Games.getAchievementsClient(activity, mAccount)
-			.increment(achievement_id, amount);
+		if (isConnected()) {
+			mAchievementsClient.increment(achievement_id, amount);
 
 			Log.i(TAG, "PlayGameServices: achievement_incresed");
 		} else { Log.i(TAG, "PlayGameServices: Google calling connect"); }
@@ -153,15 +159,18 @@ public class PlayService {
 	public void achievement_show_list() {
 		connect();
 
-		mAccount = GoogleSignIn.getLastSignedInAccount(activity);
-
-		if (mAccount != null) {
-			Games.getAchievementsClient(activity, mAccount)
-			.getAchievementsIntent()
+		if (isConnected()) {
+			mAchievementsClient.getAchievementsIntent()
 			.addOnSuccessListener(new OnSuccessListener<Intent>() {
 				@Override
 				public void onSuccess(Intent intent) {
 					activity.startActivityForResult(intent, REQUEST_ACHIEVEMENTS);
+				}
+			})
+			.addOnFailureListener(new OnFailureListener() {
+				@Override
+				public void onFailure(@NonNull Exception e) {
+					Log.d(TAG, "Showing::Loaderboard::Failed:: " + e.toString());
 				}
 			});
 
@@ -171,10 +180,8 @@ public class PlayService {
 	public void leaderboard_submit(String id, int score) {
 		connect();
 
-		mAccount = GoogleSignIn.getLastSignedInAccount(activity);
-
-		if (mAccount != null) {
-			Games.getLeaderboardsClient(activity, mAccount).submitScore(id, score);
+		if (isConnected()) {
+			mLeaderboardsClient.submitScore(id, score);
 
 			Log.i(TAG, "PlayGameServices: leaderboard_submit, " + score);
 		} else { Log.i(TAG, "PlayGameServices: Google calling connect"); }
@@ -183,41 +190,49 @@ public class PlayService {
 	public void leaderboard_show(final String l_id) {
 		connect();
 
-		mAccount = GoogleSignIn.getLastSignedInAccount(activity);
-
-		if (mAccount != null) {
-			Games.getLeaderboardsClient(activity, mAccount)
-			.getLeaderboardIntent(l_id)
+		if (isConnected()) {
+			mLeaderboardsClient.getLeaderboardIntent(l_id)
 			.addOnSuccessListener(new OnSuccessListener<Intent>() {
 				@Override
 				public void onSuccess (Intent intent) {
+					Log.d(TAG, "Showing::Loaderboard::" + l_id);
 					activity.startActivityForResult(intent, REQUEST_LEADERBOARD);
+				}
+			})
+			.addOnFailureListener(new OnFailureListener() {
+				@Override
+				public void onFailure(@NonNull Exception e) {
+					Log.d(TAG, "Showing::Loaderboard::Failed:: " + e.toString());
 				}
 			});
 
-		} else { Log.i(TAG, "PlayGameServices: Google not login calling connect"); }
+		} else { Log.i(TAG, "PlayGameServices: Google not connected calling connect"); }
 	}
 
 	public void leaderboard_show_list() {
 		connect();
 
-		mAccount = GoogleSignIn.getLastSignedInAccount(activity);
-
-		if (mAccount != null) {
-			Games.getLeaderboardsClient(activity, mAccount)
-			.getAllLeaderboardsIntent()
+		if (isConnected()) {
+			mLeaderboardsClient.getAllLeaderboardsIntent()
 			.addOnSuccessListener(new OnSuccessListener<Intent>() {
 				@Override
 				public void onSuccess (Intent intent) {
+					Log.d(TAG, "Showing::Loaderboard::List");
 					activity.startActivityForResult(intent, REQUEST_LEADERBOARD);
 				}
+			})
+			.addOnFailureListener(new OnFailureListener() {
+				@Override
+				public void onFailure(@NonNull Exception e) {
+					Log.d(TAG, "Showing::Loaderboard::Failed:: " + e.toString());
+				}
 			});
-		
-		} else { Log.i(TAG, "PlayGameServices: Google calling connect"); }
+
+		} else { Log.i(TAG, "PlayGameServices: Google not connected calling connect"); }
 	}
 
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == GUtils.GOOGLE_SIGN_IN_REQUEST) {
+		if (requestCode == GOOGLE_SIGN_IN_REQUEST) {
 			GoogleSignInResult result =
 			Auth.GoogleSignInApi.getSignInResultFromIntent(data);
 
@@ -233,12 +248,14 @@ public class PlayService {
 			mAccount = completedTask.getResult(ApiException.class);
 			succeedSignIn();
 		} catch (ApiException e) {
-			Log.w(TAG, "signInResult:failed code="
+			Log.w(TAG, "SignInResult::Failed code="
 			+ e.getStatusCode() + ", Message: " + e.getStatusMessage());
 		}
 	}
 
 	private void signInSilently() {
+		if (isConnected()) { return; }
+
 		GoogleSignInClient signInClient = GoogleSignIn.getClient(activity,
 		GoogleSignInOptions.DEFAULT_GAMES_SIGN_IN);
 
@@ -248,10 +265,17 @@ public class PlayService {
 			public void onComplete(@NonNull Task<GoogleSignInAccount> task) {
 				if (task.isSuccessful()) {
 					// The signed in account is stored in the task's result.
-					succeedSignIn();
+					try {
+						mAccount = task.getResult(ApiException.class);
+						succeedSignIn();
+					} catch (ApiException e) {
+						Log.w(TAG, "SignInResult::Failed code="
+						+ e.getStatusCode() + ", Message: "
+						+ e.getStatusMessage());
+					}
 				} else {
 					// Player will need to sign-in explicitly using via UI
-					Log.d(TAG, "Silent login failed");
+					Log.d(TAG, "Silent::Login::Failed");
 				}
 			}
 		});
@@ -268,7 +292,6 @@ public class PlayService {
 			connect();
 			//signInSilently();
 		}
-
 
 		boolean autoLaunchDeepLink = true;
 		/**
@@ -323,12 +346,17 @@ public class PlayService {
 	private static PlayService mInstance = null;
 
 	private static int script_id;
-	private static final int RC_SIGN_IN = 9001;
 
+	private static final int GOOGLE_SIGN_IN_REQUEST	= 9001;
 	private static final int REQUEST_ACHIEVEMENTS = 9002;
-	private static final int REQUEST_LEADERBOARD = 1002;
-	private static final String TAG = "GoogleService";
+	private static final int REQUEST_LEADERBOARD = 9003;
 
 	private GoogleSignInClient mGoogleSignInClient;
+
 	private GoogleSignInAccount mAccount;
+	private AchievementsClient mAchievementsClient;
+	private LeaderboardsClient mLeaderboardsClient;
+	private PlayersClient mPlayersClient;
+
+	private static final String TAG = "GoogleService";
 }

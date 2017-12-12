@@ -19,9 +19,6 @@ import java.io.BufferedReader;
 
 public class GUtils {
 
-	public static final int GOOGLE_SIGN_IN_REQUEST		= 9002;
-	// public static final int GOOGLE_ _REQUEST		=;
-
 	public static String readFromFile(String fileName, Context context) {
 		StringBuilder returnString = new StringBuilder();
 
