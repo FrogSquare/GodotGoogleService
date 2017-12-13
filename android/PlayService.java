@@ -27,6 +27,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.Scope;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -115,6 +116,9 @@ public class PlayService {
 		mAchievementsClient = Games.getAchievementsClient(activity, mAccount);
 		mLeaderboardsClient = Games.getLeaderboardsClient(activity, mAccount);
 		mPlayersClient = Games.getPlayersClient(activity, mAccount);
+
+		Games.getGamesClient(activity, mAccount).setViewForPopups(
+		activity.getWindow().getDecorView().findViewById(android.R.id.content));
 
 		GUtils.callScriptFunc("login", "true");
 
@@ -233,23 +237,39 @@ public class PlayService {
 
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode == GOOGLE_SIGN_IN_REQUEST) {
+			isIntentInProgress = false;
+
 			GoogleSignInResult result =
 			Auth.GoogleSignInApi.getSignInResultFromIntent(data);
 
-			Task<GoogleSignInAccount> task =
-			GoogleSignIn.getSignedInAccountFromIntent(data);
-
-			handleSignInResult(task);
+			handleSignInResult(result);
 		}
 	}
 
-	private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
-		try {
-			mAccount = completedTask.getResult(ApiException.class);
+	private void handleSignInResult(GoogleSignInResult m_result) {
+		if (m_result.isSuccess()) {
+			mAccount = m_result.getSignInAccount();
 			succeedSignIn();
-		} catch (ApiException e) {
+		} else {
+			Status s = m_result.getStatus();
+
 			Log.w(TAG, "SignInResult::Failed code="
-			+ e.getStatusCode() + ", Message: " + e.getStatusMessage());
+			+ s.getStatusCode() + ", Message: " + s.getStatusMessage());
+
+			if (isResolvingConnectionFailure) { return; }
+			if (!isIntentInProgress && m_result.getStatus().hasResolution()) {
+				try {
+					isIntentInProgress = true;
+
+					activity.startIntentSenderForResult(
+					s.getResolution().getIntentSender(),
+					GOOGLE_SIGN_IN_REQUEST, null, 0, 0, 0);
+				} catch (SendIntentException ex) {
+					connect();
+				}
+
+				isResolvingConnectionFailure = true;
+			}
 		}
 	}
 
@@ -334,7 +354,8 @@ public class PlayService {
 	}
 
 	public void onResume() {
-		signInSilently();
+		// Hide Google play UI's
+		//signInSilently();
 	}
 
 	public void onStop() {
@@ -350,6 +371,9 @@ public class PlayService {
 	private static final int GOOGLE_SIGN_IN_REQUEST	= 9001;
 	private static final int REQUEST_ACHIEVEMENTS = 9002;
 	private static final int REQUEST_LEADERBOARD = 9003;
+
+	private Boolean isIntentInProgress = false;
+	private Boolean isResolvingConnectionFailure = false;
 
 	private GoogleSignInClient mGoogleSignInClient;
 
