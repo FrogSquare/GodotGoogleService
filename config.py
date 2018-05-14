@@ -1,6 +1,9 @@
 
+app_id = "com.your.app_id"
+
 def can_build(plat):
     return (plat == "android")
+    #return False
 
 def configure(env):
     if env["platform"] == "android":
@@ -19,5 +22,5 @@ def configure(env):
         env.android_add_res_dir("res");
         env.android_add_to_manifest("android/AndroidManifestChunk.xml");
         env.android_add_to_permissions("android/AndroidPermissionsChunk.xml");
-        env.android_add_default_config("applicationId 'com.froglogics.dotsndots'")
+        env.android_add_default_config("applicationId '"+app_id+"'")
         env.disable_module()

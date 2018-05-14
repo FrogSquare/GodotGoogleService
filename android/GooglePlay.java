@@ -57,6 +57,14 @@ public class GooglePlay extends Godot.SingletonBase {
 		});
 	}
 
+	public void initWithDict(final Dictionary dict, final int instanceID) {
+		activity.runOnUiThread(new Runnable() {
+			public void run() {
+				PlayService.getInstance(activity).initAdvanced(dict, instanceID);
+			}
+		});
+	}
+
 	public void login() {
 		activity.runOnUiThread(new Runnable() {
 			public void run() {
@@ -126,6 +134,8 @@ public class GooglePlay extends Godot.SingletonBase {
 	}
 
 	protected void onMainActivityResult (int requestCode, int resultCode, Intent data) {
+		Log.d(TAG, "onActivityResult: reqCode=" + requestCode + ", resCode=" + resultCode);
+
 		PlayService.getInstance(activity).onActivityResult(requestCode, resultCode, data);
 	}
 
@@ -145,5 +155,5 @@ public class GooglePlay extends Godot.SingletonBase {
 	private static Context context;
 	private static Activity activity;
 
-
+    static final String TAG = "godot";
 }

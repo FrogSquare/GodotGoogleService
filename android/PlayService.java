@@ -54,6 +54,11 @@ public class PlayService {
 		activity = p_activity;
 	}
 
+    public void initAdvanced(final Dictionary dict, final int instanceID) {
+        config = dict;
+        init(instanceID);
+    }
+
 	public void init (final int instanceID) {
 		script_id = instanceID;
 		GUtils.setScriptInstance(script_id);
@@ -62,12 +67,10 @@ public class PlayService {
 			Log.d(TAG, "Play Service Available.");
 		}
 
-		GoogleSignInOptions gso =
-		new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_GAMES_SIGN_IN)
-		.requestScopes(new Scope(Scopes.GAMES))
-		.requestEmail()
-		.build();
+        GoogleSignInOptions.Builder builder = 
+            new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_GAMES_SIGN_IN);
 
+		GoogleSignInOptions gso = builder.build();
 		mGoogleSignInClient = GoogleSignIn.getClient(activity, gso);
 
 		Log.d(TAG, "Google::Initialized");
@@ -185,21 +188,21 @@ public class PlayService {
 		connect();
 
 		if (isConnected()) {
-			mLeaderboardsClient.submitScore(id, score);
+			Log.i(TAG, "Leaderboard::Submit::" + id + "::Score::" + score);
 
-			Log.i(TAG, "PlayGameServices: leaderboard_submit, " + score);
-		} else { Log.i(TAG, "PlayGameServices: Google calling connect"); }
+			mLeaderboardsClient.submitScore(id, score);
+		} else { Log.i(TAG, "Google not connected calling connect"); }
 	}
 
-	public void leaderboard_show(final String l_id) {
+	public void leaderboard_show(final String id) {
 		connect();
 
 		if (isConnected()) {
-			mLeaderboardsClient.getLeaderboardIntent(l_id)
+			mLeaderboardsClient.getLeaderboardIntent(id)
 			.addOnSuccessListener(new OnSuccessListener<Intent>() {
 				@Override
 				public void onSuccess (Intent intent) {
-					Log.d(TAG, "Showing::Loaderboard::" + l_id);
+					Log.d(TAG, "Showing::Loaderboard::" + id);
 					activity.startActivityForResult(intent, REQUEST_LEADERBOARD);
 				}
 			})
@@ -210,7 +213,7 @@ public class PlayService {
 				}
 			});
 
-		} else { Log.i(TAG, "PlayGameServices: Google not connected calling connect"); }
+		} else { Log.i(TAG, "Google not connected calling connect"); }
 	}
 
 	public void leaderboard_show_list() {
@@ -232,7 +235,7 @@ public class PlayService {
 				}
 			});
 
-		} else { Log.i(TAG, "PlayGameServices: Google not connected calling connect"); }
+		} else { Log.i(TAG, "Google not connected calling connect"); }
 	}
 
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -381,6 +384,7 @@ public class PlayService {
 	private AchievementsClient mAchievementsClient;
 	private LeaderboardsClient mLeaderboardsClient;
 	private PlayersClient mPlayersClient;
+    private Dictionary config;
 
 	private static final String TAG = "GoogleService";
 }
