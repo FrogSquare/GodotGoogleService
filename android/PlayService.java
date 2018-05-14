@@ -159,7 +159,7 @@ public class PlayService {
 		if (isConnected()) {
 			mAchievementsClient.increment(achievement_id, amount);
 
-			Log.i(TAG, "PlayGameServices: achievement_incresed");
+			Log.i(TAG, "PlayGameServices: achievement_increased");
 		} else { Log.i(TAG, "PlayGameServices: Google calling connect"); }
 	}
 
