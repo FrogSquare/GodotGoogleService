@@ -1,26 +1,67 @@
+"""
+# Copyright 2017 FrogSquare. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
 
-app_id = "games.misu.greatalchemist"
+import os
+from colors import *
 
-def can_build(plat):
-    return (plat == "android")
+# Set your Android app ID
+app_id = "com.example.game"
+
+def can_build(env, plat = None):
     #return False
+    if plat == None:
+        print("`GodotGoogleService`"+RED+" master "+RESET+" branch not compatable with godot 2.X")
+        print("Try using `GodotGoogleService` "+GREEN+" 2.X "+RESET+" branch for Godot 2.X")
+        return False
+
+    if plat == "android":
+        print("GodotGoogleService: " + GREEN + "Enabled" + RESET)
+        return True
+    else:
+        print("GodotGoogleService: " + RED + "Disabled" + RESET)
+        return False
+    pass   
+
+def implement(api, support=True):
+    supportv4 = "{exclude group: 'com.android.support' exclude module: 'support-v4'}"
+    return "implementation('"+api+"')" + (supportv4 if support else "")
+    pass
 
 def configure(env):
     if env["platform"] == "android":
         env.android_add_maven_repository("url 'https://maven.google.com'")
         env.android_add_maven_repository("url 'https://oss.sonatype.org/content/repositories/snapshots'")
 
-        env.android_add_gradle_classpath("com.google.gms:google-services:3.1.1")
+        env.android_add_gradle_classpath("com.google.gms:google-services:4.1.0")
         env.android_add_gradle_plugin("com.google.gms.google-services")
 
-        env.android_add_dependency("compile 'com.google.android.gms:play-services-auth:15.0.1'")
-        env.android_add_dependency("compile 'com.google.android.gms:play-services-games:15.0.1'")
+        env.android_add_dependency(implement("com.google.android.gms:play-services-auth:16.0.1"))
+        env.android_add_dependency(implement("com.google.android.gms:play-services-games:16.0.0"))
 
-	env.android_add_dependency("compile 'com.google.firebase:firebase-invites:16.0.1'")
+	env.android_add_dependency(implement("com.google.firebase:firebase-invites:16.1.0"))
 
         env.android_add_java_dir("android");
         env.android_add_res_dir("res");
+
+        if "frogutils" in [os.path.split(path)[1] for path in env.android_java_dirs]: pass
+        else: env.android_add_java_dir("frogutils");
+
         env.android_add_to_manifest("android/AndroidManifestChunk.xml");
         env.android_add_to_permissions("android/AndroidPermissionsChunk.xml");
         env.android_add_default_config("applicationId '"+app_id+"'")
         env.disable_module()
+
+    pass

@@ -61,9 +61,9 @@ public class PlayService {
 
 	public void init (final int instanceID) {
 		script_id = instanceID;
-		GUtils.setScriptInstance(script_id);
+		Utils.setScriptInstance(script_id);
 
-		if (GUtils.checkGooglePlayService(activity)) {
+		if (Utils.checkGooglePlayService(activity)) {
 			Log.d(TAG, "Play Service Available.");
 		}
 
@@ -108,7 +108,7 @@ public class PlayService {
 				mLeaderboardsClient = null;
 				mPlayersClient = null;
 
-				GUtils.callScriptFunc("login", "false");
+				Utils.callScriptFunc("GoogleService", "login", "false");
 			}
 		});
 	}
@@ -123,7 +123,7 @@ public class PlayService {
 		Games.getGamesClient(activity, mAccount).setViewForPopups(
 		activity.getWindow().getDecorView().findViewById(android.R.id.content));
 
-		GUtils.callScriptFunc("login", "true");
+		Utils.callScriptFunc("GoogleService", "login", "true");
 
 		mPlayersClient.getCurrentPlayer()
 		.addOnCompleteListener(new OnCompleteListener<Player>() {
@@ -137,7 +137,7 @@ public class PlayService {
 					Exception e = task.getException();
 				}
 
-				GUtils.callScriptFunc("user", displayName);
+				Utils.callScriptFunc("GoogleService", "user", displayName);
                     }
 		});
 	}
