@@ -28,7 +28,7 @@ public class GooglePlay extends Godot.SingletonBase {
 
 	public GooglePlay(Activity p_activity) {
 		registerClass ("GooglePlay", new String[] {
-			"init", "login", "logout", "unlock_achievement",
+			"init", "set_debug", "login", "logout", "unlock_achievement",
 			"increase_achievement", "show_achievements",
 			"submit_leaderboard", "show_leaderboard", "show_leaderboards",
 			"get_version_code"
@@ -56,6 +56,10 @@ public class GooglePlay extends Godot.SingletonBase {
 			}
 		});
 	}
+
+    public void set_debug(final boolean p_value) {
+        Utils.set_debug(TAG, p_value);
+    }
 
 	public void initWithDict(final Dictionary dict, final int instanceID) {
 		activity.runOnUiThread(new Runnable() {
@@ -134,7 +138,7 @@ public class GooglePlay extends Godot.SingletonBase {
 	}
 
 	protected void onMainActivityResult (int requestCode, int resultCode, Intent data) {
-		Log.d(TAG, "onActivityResult: reqCode=" + requestCode + ", resCode=" + resultCode);
+		Utils.d(TAG, "onActivityResult: reqCode=" + requestCode + ", resCode=" + resultCode);
 
 		PlayService.getInstance(activity).onActivityResult(requestCode, resultCode, data);
 	}

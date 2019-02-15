@@ -64,7 +64,7 @@ public class PlayService {
 		Utils.setScriptInstance(script_id);
 
 		if (Utils.checkGooglePlayService(activity)) {
-			Log.d(TAG, "Play Service Available.");
+			Utils.d(TAG, "Play Service Available.");
 		}
 
         GoogleSignInOptions.Builder builder = 
@@ -73,7 +73,7 @@ public class PlayService {
 		GoogleSignInOptions gso = builder.build();
 		mGoogleSignInClient = GoogleSignIn.getClient(activity, gso);
 
-		Log.d(TAG, "Google::Initialized");
+		Utils.d(TAG, "Google::Initialized");
 		onStart();
 	}
 
@@ -84,12 +84,12 @@ public class PlayService {
 
 	public void connect() {
 		if (mGoogleSignInClient == null) {
-			Log.d(TAG, "GoogleSignInClient not initialized");
+			Utils.d(TAG, "GoogleSignInClient not initialized");
 			return;
 		}
 
 		if (isConnected()) {
-			Log.d(TAG, "Google service is already connected");
+			Utils.d(TAG, "Google service is already connected");
 			return;
 		}
 
@@ -102,7 +102,7 @@ public class PlayService {
 		.addOnCompleteListener(activity, new OnCompleteListener<Void>() {
 			@Override
 			public void onComplete(@NonNull Task<Void> task) {
-				Log.d(TAG, "Google signed out.");
+				Utils.d(TAG, "Google signed out.");
 
 				mAchievementsClient = null;
 				mLeaderboardsClient = null;
@@ -114,7 +114,7 @@ public class PlayService {
 	}
 
 	public void succeedSignIn() {
-		Log.d(TAG, "Google signed in.");
+		Utils.d(TAG, "Google signed in.");
 
 		mAchievementsClient = Games.getAchievementsClient(activity, mAccount);
 		mLeaderboardsClient = Games.getLeaderboardsClient(activity, mAccount);
@@ -149,8 +149,8 @@ public class PlayService {
 			// KeyValueStorage.setValue(achievement_id, "true");
 			mAchievementsClient.unlock(achievement_id);
 
-			Log.i(TAG, "PlayGameServices: achievement_unlock");
-		} else { Log.w(TAG, "PlayGameServices: Google calling connect"); }
+			Utils.i(TAG, "PlayGameServices: achievement_unlock");
+		} else { Utils.w(TAG, "PlayGameServices: Google calling connect"); }
 	}
 
 	public void achievement_increment(final String achievement_id, final int amount) {
@@ -159,8 +159,8 @@ public class PlayService {
 		if (isConnected()) {
 			mAchievementsClient.increment(achievement_id, amount);
 
-			Log.i(TAG, "PlayGameServices: achievement_increased");
-		} else { Log.i(TAG, "PlayGameServices: Google calling connect"); }
+			Utils.i(TAG, "PlayGameServices: achievement_increased");
+		} else { Utils.i(TAG, "PlayGameServices: Google calling connect"); }
 	}
 
 	public void achievement_show_list() {
@@ -177,21 +177,21 @@ public class PlayService {
 			.addOnFailureListener(new OnFailureListener() {
 				@Override
 				public void onFailure(@NonNull Exception e) {
-					Log.d(TAG, "Showing::Loaderboard::Failed:: " + e.toString());
+					Utils.d(TAG, "Showing::Loaderboard::Failed:: " + e.toString());
 				}
 			});
 
-		} else { Log.i(TAG, "PlayGameServices: Google calling connect"); }
+		} else { Utils.i(TAG, "PlayGameServices: Google calling connect"); }
 	}
 
 	public void leaderboard_submit(String id, int score) {
 		connect();
 
 		if (isConnected()) {
-			Log.i(TAG, "Leaderboard::Submit::" + id + "::Score::" + score);
+			Utils.i(TAG, "Leaderboard::Submit::" + id + "::Score::" + score);
 
 			mLeaderboardsClient.submitScore(id, score);
-		} else { Log.i(TAG, "Google not connected calling connect"); }
+		} else { Utils.i(TAG, "Google not connected calling connect"); }
 	}
 
 	public void leaderboard_show(final String id) {
@@ -202,18 +202,18 @@ public class PlayService {
 			.addOnSuccessListener(new OnSuccessListener<Intent>() {
 				@Override
 				public void onSuccess (Intent intent) {
-					Log.d(TAG, "Showing::Loaderboard::" + id);
+					Utils.d(TAG, "Showing::Loaderboard::" + id);
 					activity.startActivityForResult(intent, REQUEST_LEADERBOARD);
 				}
 			})
 			.addOnFailureListener(new OnFailureListener() {
 				@Override
 				public void onFailure(@NonNull Exception e) {
-					Log.d(TAG, "Showing::Loaderboard::Failed:: " + e.toString());
+					Utils.d(TAG, "Showing::Loaderboard::Failed:: " + e.toString());
 				}
 			});
 
-		} else { Log.i(TAG, "Google not connected calling connect"); }
+		} else { Utils.i(TAG, "Google not connected calling connect"); }
 	}
 
 	public void leaderboard_show_list() {
@@ -224,18 +224,18 @@ public class PlayService {
 			.addOnSuccessListener(new OnSuccessListener<Intent>() {
 				@Override
 				public void onSuccess (Intent intent) {
-					Log.d(TAG, "Showing::Loaderboard::List");
+					Utils.d(TAG, "Showing::Loaderboard::List");
 					activity.startActivityForResult(intent, REQUEST_LEADERBOARD);
 				}
 			})
 			.addOnFailureListener(new OnFailureListener() {
 				@Override
 				public void onFailure(@NonNull Exception e) {
-					Log.d(TAG, "Showing::Loaderboard::Failed:: " + e.toString());
+					Utils.d(TAG, "Showing::Loaderboard::Failed:: " + e.toString());
 				}
 			});
 
-		} else { Log.i(TAG, "Google not connected calling connect"); }
+		} else { Utils.i(TAG, "Google not connected calling connect"); }
 	}
 
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -256,7 +256,7 @@ public class PlayService {
 		} else {
 			Status s = m_result.getStatus();
 
-			Log.w(TAG, "SignInResult::Failed code="
+			Utils.w(TAG, "SignInResult::Failed code="
 			+ s.getStatusCode() + ", Message: " + s.getStatusMessage());
 
 			if (isResolvingConnectionFailure) { return; }
@@ -292,13 +292,13 @@ public class PlayService {
 						mAccount = task.getResult(ApiException.class);
 						succeedSignIn();
 					} catch (ApiException e) {
-						Log.w(TAG, "SignInResult::Failed code="
+						Utils.w(TAG, "SignInResult::Failed code="
 						+ e.getStatusCode() + ", Message: "
 						+ e.getStatusMessage());
 					}
 				} else {
 					// Player will need to sign-in explicitly using via UI
-					Log.d(TAG, "Silent::Login::Failed");
+					Utils.d(TAG, "Silent::Login::Failed");
 				}
 			}
 		});
@@ -308,10 +308,10 @@ public class PlayService {
 		mAccount = GoogleSignIn.getLastSignedInAccount(activity);
 
 		if (mAccount != null) {
-			Log.d(TAG, "Google already connected to an account");
+			Utils.d(TAG, "Google already connected to an account");
 			succeedSignIn();
 		} else {
-			Log.d(TAG, "Google not connected");
+			Utils.d(TAG, "Google not connected");
 			connect();
 			//signInSilently();
 		}
@@ -327,7 +327,7 @@ public class PlayService {
                 @Override
                 public void onSuccess(PendingDynamicLinkData data) {
                     if (data == null) {
-                        Log.d(TAG, "getInvitation: no data");
+                        Utils.d(TAG, "getInvitation: no data");
                         return;
                     }
 
@@ -346,7 +346,7 @@ public class PlayService {
 		}).addOnFailureListener(this, new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
-                    Log.w(TAG, "getDynamicLink:onFailure", e);
+                    Utils.w(TAG, "getDynamicLink:onFailure", e);
                 }
 		});
 		**/

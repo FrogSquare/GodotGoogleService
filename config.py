@@ -20,12 +20,17 @@ from colors import *
 # Set your Android app ID
 app_id = "com.example.game"
 
-def can_build(env, plat = None):
+def can_build(env_plat, plat = None):
     #return False
     if plat == None:
-        print("`GodotGoogleService`"+RED+" master "+RESET+" branch not compatable with godot 2.X")
-        print("Try using `GodotGoogleService` "+GREEN+" 2.X "+RESET+" branch for Godot 2.X")
-        return False
+        #print("`GodotAds`"+RED+" master "+RESET+" branch not compatable with godot 2.X")
+        #print("Try using `GodotAds` "+GREEN+" 2.X "+RESET+" branch for Godot 2.X")
+
+        if isinstance(env_plat, basestring):
+            plat = env_plat
+        else:
+            print("GodotGoogleService: "+RED+" Platform not set, Disabling GodotGoogleService "+RESET)
+            return False
 
     if plat == "android":
         print("GodotGoogleService: " + GREEN + "Enabled" + RESET)
