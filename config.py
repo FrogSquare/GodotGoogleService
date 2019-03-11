@@ -53,6 +53,7 @@ def configure(env):
         env.android_add_gradle_classpath("com.google.gms:google-services:4.1.0")
         env.android_add_gradle_plugin("com.google.gms.google-services")
 
+        env.android_add_dependency(implement("com.android.support:support-fragment:28.0.0", False))
         env.android_add_dependency(implement("com.google.android.gms:play-services-auth:16.0.1"))
         env.android_add_dependency(implement("com.google.android.gms:play-services-games:16.0.0"))
 
