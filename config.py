@@ -18,7 +18,7 @@ import os
 from colors import *
 
 # Set your Android app ID
-app_id = "com.example.game"
+p_app_id = "com.example.game"
 
 def can_build(env_plat, plat = None):
     #return False
@@ -46,13 +46,19 @@ def implement(api, support=True):
     pass
 
 def configure(env):
+    global p_app_id
     if env["platform"] == "android":
+
+        if env.get("application_id", None) != None:
+            p_app_id = env["application_id"]
+
         env.android_add_maven_repository("url 'https://maven.google.com'")
         env.android_add_maven_repository("url 'https://oss.sonatype.org/content/repositories/snapshots'")
 
         env.android_add_gradle_classpath("com.google.gms:google-services:4.1.0")
         env.android_add_gradle_plugin("com.google.gms.google-services")
 
+        env.android_add_dependency(implement("com.android.support:support-fragment:28.0.0", False))
         env.android_add_dependency(implement("com.google.android.gms:play-services-auth:16.0.1"))
         env.android_add_dependency(implement("com.google.android.gms:play-services-games:16.0.0"))
 
@@ -66,7 +72,7 @@ def configure(env):
 
         env.android_add_to_manifest("android/AndroidManifestChunk.xml");
         env.android_add_to_permissions("android/AndroidPermissionsChunk.xml");
-        env.android_add_default_config("applicationId '"+app_id+"'")
+        env.android_add_default_config("applicationId '"+p_app_id+"'")
         env.disable_module()
 
     pass
