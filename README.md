@@ -82,7 +82,7 @@ google.logout()
 # Google play achievements
 ```
 google.unlock_achievement("achievementID") # unlock achievement;
-google.increse_achievement("achievementID", int(n)) # increse achievements by step.
+google.increase_achievement("achievementID", int(n)) # increse achievements by step.
 google.show_achievements() # show achievements;
 ```
 
