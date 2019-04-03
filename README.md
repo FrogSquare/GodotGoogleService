@@ -10,6 +10,7 @@ GodotGoogleService is a google play games integration for godot android;
 # Depends on
 
 > Godot game engine: `git clone https://github.com/godotengine/godot`
+
 > GodotSql `git clone https://github.com/FrogSquare/GodotSql`
 
 # Available Features
