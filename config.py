@@ -1,8 +1,6 @@
 """
 # Copyright 2017 FrogSquare. All Rights Reserved.
 #
-# Modifications copyright 2019 Jordan Tully. All Rights Reserved
-#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -14,9 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# NOTICE: THIS FILE HAS BEEN MODIFIED BY Jordan Tully UNDER COMPLIANCE WITH THE APACHE 2.0 LICENCE FROM THE ORIGINAL WORK 
-# OF THE COMPANY FrogSquare.
 """
 
 import os
@@ -53,7 +48,7 @@ def configure(env):
 
         env.android_add_dependency(implement("com.android.support:support-fragment:28.0.0", False))
         env.android_add_dependency(implement("com.google.android.gms:play-services-auth:16.0.1"))
-        env.android_add_dependency(implement("com.google.android.gms:play-services-games:17.0.0"))
+        env.android_add_dependency(implement("com.google.android.gms:play-services-games:16.0.0"))
 
         env.android_add_java_dir("android")
         env.android_add_res_dir("res")
