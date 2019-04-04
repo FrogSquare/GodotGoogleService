@@ -7,17 +7,11 @@ GodotGoogleService is a google play games integration for godot android;
 [![LICENCE](https://img.shields.io/badge/License-Apache_V2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![PATREON](https://img.shields.io/badge/Patreon-support-yellow.svg)](https://www.patreon.com/bePatron?u=5130479)
 
-# Cloning
-```
-cd ${GODOT_ROOT}/modules/
-git clone https://github.com/FrogSquare/GodotGoogleAds GodotGoogleAds
-git clone https://github.com/FrogSquare/GodotSql GodotSql
-```
- and you must configure your module by editing `${GODOT_ROOT}/modules/GodotGoogleAds/config.py`
-
 # Depends on
 
 > Godot game engine: `git clone https://github.com/godotengine/godot`
+
+> GodotSql `git clone https://github.com/FrogSquare/GodotSql`
 
 # Available Features
 
@@ -25,25 +19,25 @@ git clone https://github.com/FrogSquare/GodotSql GodotSql
 
 > Logout
 
-> achievements
+> Achievements
 
-> leaderboard
+> Leaderboard
 
 # Build/Compile module
 
 * Edit file modules/GodotGoogleService/config.py at line 2
 ```
-p_app_id = "com.your.appid"     # config.py L:2
+p_app_id = "com.your.appid"     # config.py
 ```
 
-* Replay `com.your.appid` with you android application id.
+* Replace `com.your.appid` with your android application id.
 
 # Initialize GodotGoogleService
 
-Edit engine.cfg and add
+Edit project.godot and add
 ```
 [android]
-modules="org/godotengine/godot/GooglePlay"
+modules="org/godotengine/godot/GooglePlay,org/godotengine/godot/SQLBridge"
 ```
 
 # GDScript - getting module singleton and initializing;
