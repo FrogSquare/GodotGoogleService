@@ -13,7 +13,6 @@ import android.util.Log;
 import android.view.View;
 import android.os.Bundle;
 
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -22,7 +21,7 @@ import org.json.JSONException;
 
 public class GooglePlay extends Godot.SingletonBase {
 
-	static public Godot.SingletonBase initialize (Activity p_activity) {
+	 public static Godot.SingletonBase initialize (Activity p_activity) {
 		return new GooglePlay(p_activity);
 	}
 
@@ -35,6 +34,11 @@ public class GooglePlay extends Godot.SingletonBase {
 		});
 
 		activity = p_activity;
+		if (playService == null) {
+			synchronized(PlayService.class) {
+				playService = new PlayService(p_activity);
+			}
+		}
 	}
 
 	public int get_version_code(final int instanceID) {
@@ -52,7 +56,7 @@ public class GooglePlay extends Godot.SingletonBase {
 	public void init(final int instanceID) {
 		activity.runOnUiThread(new Runnable() {
 			public void run() {
-				PlayService.getInstance(activity).init(instanceID);
+				playService.init(instanceID);
 			}
 		});
 	}
@@ -64,7 +68,7 @@ public class GooglePlay extends Godot.SingletonBase {
 	public void initWithDict(final Dictionary dict, final int instanceID) {
 		activity.runOnUiThread(new Runnable() {
 			public void run() {
-				PlayService.getInstance(activity).initAdvanced(dict, instanceID);
+				playService.initAdvanced(dict, instanceID);
 			}
 		});
 	}
@@ -72,7 +76,7 @@ public class GooglePlay extends Godot.SingletonBase {
 	public void login() {
 		activity.runOnUiThread(new Runnable() {
 			public void run() {
-				PlayService.getInstance(activity).connect();
+				playService.connect();
 			}
 		});
 	}
@@ -80,19 +84,19 @@ public class GooglePlay extends Godot.SingletonBase {
 	public void logout() {
 		activity.runOnUiThread(new Runnable() {
 			public void run() {
-				PlayService.getInstance(activity).disconnect();
+				playService.disconnect();
 			}
 		});
 	}
 
 	public boolean isConnected() {
-		return PlayService.getInstance(activity).isConnected();
+		return playService.isConnected();
 	}
 
 	public void unlock_achievement(final String id) {
 		activity.runOnUiThread(new Runnable() {
 			public void run() {
-				PlayService.getInstance(activity).achievement_unlock(id);
+				playService.achievement_unlock(id);
 			}
 		});
 	}
@@ -100,7 +104,7 @@ public class GooglePlay extends Godot.SingletonBase {
 	public void increase_achievement(final String id, final int steps) {
 		activity.runOnUiThread(new Runnable() {
 			public void run() {
-				PlayService.getInstance(activity).achievement_increment(id, steps);
+				playService.achievement_increment(id, steps);
 			}
 		});
 	}
@@ -108,7 +112,7 @@ public class GooglePlay extends Godot.SingletonBase {
 	public void show_achievements() {
 		activity.runOnUiThread(new Runnable() {
 			public void run() {
-				PlayService.getInstance(activity).achievement_show_list();
+				playService.achievement_show_list();
 			}
 		});
 	}
@@ -116,7 +120,7 @@ public class GooglePlay extends Godot.SingletonBase {
 	public void submit_leaderboard(final int score, final String l_id) {
 		activity.runOnUiThread(new Runnable() {
 			public void run() {
-				PlayService.getInstance(activity).leaderboard_submit(l_id, score);
+				playService.leaderboard_submit(l_id, score);
 			}
 		});
 	}
@@ -124,7 +128,7 @@ public class GooglePlay extends Godot.SingletonBase {
 	public void show_leaderboard(final String l_id) {
 		activity.runOnUiThread(new Runnable() {
 			public void run() {
-				PlayService.getInstance(activity).leaderboard_show(l_id);
+				playService.leaderboard_show(l_id);
 			}
 		});
 	}
@@ -132,7 +136,7 @@ public class GooglePlay extends Godot.SingletonBase {
 	public void show_leaderboards() {
 		activity.runOnUiThread(new Runnable() {
 			public void run() {
-				PlayService.getInstance(activity).leaderboard_show_list();
+				playService.leaderboard_show_list();
 			}
 		});
 	}
@@ -140,24 +144,24 @@ public class GooglePlay extends Godot.SingletonBase {
 	protected void onMainActivityResult (int requestCode, int resultCode, Intent data) {
 		Utils.d(TAG, "onActivityResult: reqCode=" + requestCode + ", resCode=" + resultCode);
 
-		PlayService.getInstance(activity).onActivityResult(requestCode, resultCode, data);
+		playService.onActivityResult(requestCode, resultCode, data);
 	}
 
 	protected void onMainPause () {
-		PlayService.getInstance(activity).onPause();
+		playService.onPause();
 	}
 
 	protected void onMainResume () {
-//		mFirebaseAnalytics.setCurrentScreen(activity, "Main", currentScreen);
-		PlayService.getInstance(activity).onResume();
+		playService.onResume();
 	}
 
 	protected void onMainDestroy () {
-		PlayService.getInstance(activity).onStop();
+		playService.onStop();
 	}
 
-	private static Context context;
-	private static Activity activity;
+	private Context context;
+	private Activity activity;
+	private PlayService playService = null;
 
     static final String TAG = "godot";
 }

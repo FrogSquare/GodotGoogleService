@@ -39,17 +39,7 @@ import com.google.android.gms.games.PlayersClient;
 import com.google.android.gms.tasks.Task;
 
 public class PlayService {
-
-	public static PlayService getInstance (Activity p_activity) {
-		if (mInstance == null) {
-			synchronized (PlayService.class) {
-				mInstance = new PlayService(p_activity);
-			}
-		}
-
-		return mInstance;
-	}
-
+	
 	public PlayService(Activity p_activity) {
 		activity = p_activity;
 	}
@@ -365,9 +355,8 @@ public class PlayService {
 		activity = null;
 	}
 
-	private static Activity activity = null;
-	private static Context context = null;
-	private static PlayService mInstance = null;
+	private Activity activity = null;
+	private Context context = null;
 
 	private static int script_id;
 
