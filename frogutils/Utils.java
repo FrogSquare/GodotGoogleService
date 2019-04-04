@@ -1,6 +1,8 @@
 /**
  * Copyright 2017 FrogSquare. All Rights Reserved.
  *
+ * Modifications copyright Jordan Tully. All Rights Reserved.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,6 +14,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * NOTICE: THIS FILE HAS BEEN MODIFIED BY Jordan Tully UNDER COMPLIANCE WITH THE APACHE 2.0 LICENCE FROM THE ORIGINAL WORK 
+ * OF THE COMPANY FrogSquare.
  **/
 
 package org.godotengine.godot;
@@ -41,19 +46,13 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Iterator;
+import java.util.Locale;
 
 import org.godotengine.godot.Utils;
 
 public class Utils {
 
     public static final String TAG = "FrogSquare";
-
-	public static final int FIREBASE_INVITE_REQUEST		= 8002;
-	public static final int FIREBASE_NOTIFICATION_REQUEST	= 8003;
-	public static final int FIREBASE_GOOGLE_SIGN_IN		= 8004;
-	public static final int FIREBASE_FACEBOOK_SIGN_IN	= 8005;
-	public static final int FIREBASE_TWITTER_SIGN_IN	= 8006;
-	// public static final int FIREBASE_ = ;
 
     public static void initDebug(final String from) {
         if (DebugCfg == null) {
@@ -83,26 +82,6 @@ public class Utils {
             return DebugCfg.get(from);
         }
     }
-
-    /** GodotSQL **/
-    public static boolean get_db_bool(final String p_key) {
-        String val = get_db_value(p_key);
-
-        if (val.equals("0") || val.equals("false")) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    public static String get_db_value(final String p_key) {
-        return KeyValueStorage.getValue(p_key);
-    }
-
-    public static void set_db_value(final String p_key, final String p_value) {
-        KeyValueStorage.setValue(p_key, p_value);
-    }
-    /** GodotSQL **/
 
 	public static void d(final String from, final String message) {
 		if (get_debug(from)) {
@@ -182,7 +161,7 @@ public class Utils {
 
 		try {
 			fIn = context.getResources().getAssets()
-			.open(fileName, Context.MODE_WORLD_READABLE);
+			.open(fileName, Context.MODE_PRIVATE);
 
 			isr = new InputStreamReader(fIn);
 			input = new BufferedReader(isr);
@@ -211,17 +190,6 @@ public class Utils {
 
 	public static String askForPath(final String folder) {
 		return Environment.getExternalStorageDirectory().getAbsolutePath() + folder;
-	}
-
-	// { Device ID - https://stackoverflow.com/questions/4524752/how-can-i-get-device-id-for-admob
-
-	public static String getDeviceId(Activity activity) {
-		String android_id =
-		Settings.Secure.getString(activity.getContentResolver(), Settings.Secure.ANDROID_ID);
-
-		String deviceId = md5(android_id).toUpperCase();
-
-		return android_id;
 	}
 
 	public static final String md5(final String s) {
