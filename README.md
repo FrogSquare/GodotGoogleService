@@ -29,6 +29,12 @@ p_app_id = "com.your.appid"     # config.py
 ```
 
 * Replace `com.your.appid` with your android application id.
+* Edit file modules/GodotGoogleService/res/values/ids.xml at line 5
+```
+<string name="google_play_app_id">YOUR APP ID</string>  #ids.xml
+```
+
+* Replace `YOUR APP ID` with your google play app id from the google play console.
 
 # Initialize GodotGoogleService
 
