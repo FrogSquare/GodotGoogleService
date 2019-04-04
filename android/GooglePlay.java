@@ -21,7 +21,7 @@ import org.json.JSONException;
 
 public class GooglePlay extends Godot.SingletonBase {
 
-	 public static Godot.SingletonBase initialize (Activity p_activity) {
+	public static Godot.SingletonBase initialize (Activity p_activity) {
 		return new GooglePlay(p_activity);
 	}
 
