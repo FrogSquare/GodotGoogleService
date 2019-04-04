@@ -11,8 +11,6 @@ GodotGoogleService is a google play games integration for godot android;
 
 > Godot game engine: `git clone https://github.com/godotengine/godot`
 
-> GodotSql `git clone https://github.com/FrogSquare/GodotSql`
-
 # Available Features
 
 > Login
@@ -37,7 +35,7 @@ p_app_id = "com.your.appid"     # config.py
 Edit project.godot and add
 ```
 [android]
-modules="org/godotengine/godot/GooglePlay,org/godotengine/godot/SQLBridge"
+modules="org/godotengine/godot/GooglePlay"
 ```
 
 # GDScript - getting module singleton and initializing;
