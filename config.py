@@ -23,7 +23,7 @@ import os
 from colors import *
 
 # Set your Android app ID
-app_id = "com.example.game"
+app_id = "com.your.appid"
 
 def can_build(env_plat, plat = None):
     #return False

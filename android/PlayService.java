@@ -174,7 +174,7 @@ public class PlayService {
 		} else { Utils.i(TAG, "PlayGameServices: Google calling connect"); }
 	}
 
-	public void leaderboard_submit(String id, int score) {
+	public void leaderboard_submit(final String id, final int score) {
 		connect();
 
 		if (isConnected()) {
