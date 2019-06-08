@@ -10,10 +10,10 @@ GodotGoogleService is a google play games integration for godot android;
 # Cloning
 ```
 cd ${GODOT_ROOT}/modules/
-git clone https://github.com/FrogSquare/GodotGoogleAds GodotGoogleAds
+git  clone https://github.com/FrogSquare/GodotGoogleService GodotGoogleService
 git clone https://github.com/FrogSquare/GodotSql GodotSql
 ```
- and you must configure your module by editing `${GODOT_ROOT}/modules/GodotGoogleAds/config.py`
+ and you must configure your module by editing `${GODOT_ROOT}/modules/GodotGoogleService/config.py`
 
 # Depends on
 
