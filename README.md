@@ -65,7 +65,7 @@ And initialize GodotGoogleService with script instance id
 ```
 func _ready():
 	if OS.get_name() == "Android":
-		google.init(get_instance_ID()) # use get_instance_id () for Godot 3.X
+		google.init(get_instance_id()) # use get_instance_id () for Godot 3.X
 
 func _receive_message(from, key, data):
 	if from == "GooglePlay":
