@@ -62,7 +62,7 @@ def configure(env):
         env.android_add_dependency(implement("com.google.android.gms:play-services-auth:16.0.1"))
         env.android_add_dependency(implement("com.google.android.gms:play-services-games:16.0.0"))
 
-	env.android_add_dependency(implement("com.google.firebase:firebase-invites:16.1.0"))
+        env.android_add_dependency(implement("com.google.firebase:firebase-invites:16.1.0"))
 
         env.android_add_java_dir("android");
         env.android_add_res_dir("res");
