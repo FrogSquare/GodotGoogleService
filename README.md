@@ -67,7 +67,7 @@ func _ready():
 	if OS.get_name() == "Android":
 		google.init(get_instance_id()) # use get_instance_id () for Godot 3.X
 
-func _receive_message(from, key, data):
+func _receive_message(tag, from, key, data):
 	if from == "GooglePlay":
 		print("Key: ", key, " Data: ", data)
 
